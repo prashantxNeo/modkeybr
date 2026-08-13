@@ -41,8 +41,13 @@ export class GuidedLesson extends Lesson {
   override update(keyStatsMap: KeyStatsMap) {
     const alphabetSize = this.settings.get(lessonProps.guided.alphabetSize);
     const recoverKeys = this.settings.get(lessonProps.guided.recoverKeys);
+    const pausedKeys = new Set(
+      this.settings.get(lessonProps.guided.pausedKeys),
+    );
 
-    const letters = this.#getLetters();
+    const letters = this.#getLetters().filter(
+      (letter) => !pausedKeys.has(letter.label),
+    );
 
     const minSize = 6;
     const maxSize =

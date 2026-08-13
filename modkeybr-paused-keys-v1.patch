@@ -1,0 +1,144 @@
+--- a/packages/keybr-lesson/lib/settings.ts
++++ b/packages/keybr-lesson/lib/settings.ts
+@@ -20,6 +20,7 @@
+       max: 1,
+     }),
+     recoverKeys: booleanProp("lesson.guided.recoverKeys", false),
++    pausedKeys: stringProp("lesson.guided.pausedKeys", "", { maxLength: 100 }),
+   } as const,
+   wordList: {
+     wordListSize: numberProp("lesson.wordList.wordListSize", 1000, {
+--- a/packages/keybr-lesson/lib/guided.ts
++++ b/packages/keybr-lesson/lib/guided.ts
+@@ -41,8 +41,13 @@
+   override update(keyStatsMap: KeyStatsMap) {
+     const alphabetSize = this.settings.get(lessonProps.guided.alphabetSize);
+     const recoverKeys = this.settings.get(lessonProps.guided.recoverKeys);
++    const pausedKeys = new Set(
++      this.settings.get(lessonProps.guided.pausedKeys),
++    );
+ 
+-    const letters = this.#getLetters();
++    const letters = this.#getLetters().filter(
++      (letter) => !pausedKeys.has(letter.label),
++    );
+ 
+     const minSize = 6;
+     const maxSize =
+--- a/packages/keybr-lesson/lib/guided.test.ts
++++ b/packages/keybr-lesson/lib/guided.test.ts
+@@ -189,6 +189,33 @@
+         "x x x x x x x x x x",
+     );
+   });
++});
++
++test("paused keys are excluded from guided lessons", () => {
++  const settings = new Settings().set(
++    lessonProps.guided.pausedKeys,
++    FakePhoneticModel.letter1.label,
++  );
++  const keyboard = loadKeyboard(Layout.EN_US);
++  const model = new FakePhoneticModel();
++  const lesson = new GuidedLesson(settings, keyboard, model, []);
++
++  equal(
++    printLessonKeys(
++      lesson.update(
++        fakeKeyStatsMap(settings, [
++          [FakePhoneticModel.letter1, null, null], // A
++          [FakePhoneticModel.letter2, null, null], // B
++          [FakePhoneticModel.letter3, null, null], // C
++          [FakePhoneticModel.letter4, null, null], // D
++          [FakePhoneticModel.letter5, null, null], // E
++          [FakePhoneticModel.letter6, null, null], // F
++          [FakePhoneticModel.letter7, null, null], // G
++        ]),
++      ),
++    ),
++    "[B]CDEFG",
++  );
+ });
+ 
+ test("generate text with pseudo words", () => {
+--- a/packages/page-practice/lib/settings/lesson/GuidedLessonSettings.tsx
++++ b/packages/page-practice/lib/settings/lesson/GuidedLessonSettings.tsx
+@@ -6,6 +6,7 @@
+ import { KeyboardOrderProp } from "./KeyboardOrderProp.tsx";
+ import { LessonLengthProp } from "./LessonLengthProp.tsx";
+ import { NaturalWordsProp } from "./NaturalWordsProp.tsx";
++import { PausedKeysProp } from "./PausedKeysProp.tsx";
+ import { RecoverKeysProp } from "./RecoverKeysProp.tsx";
+ import { RepeatWordsProp } from "./RepeatWordsProp.tsx";
+ import { TargetSpeedProp } from "./TargetSpeedProp.tsx";
+@@ -35,6 +36,7 @@
+       >
+         <TargetSpeedProp />
+         <RecoverKeysProp />
++        <PausedKeysProp letters={lesson.letters} />
+         <KeyboardOrderProp />
+         <NaturalWordsProp />
+         <RepeatWordsProp />
+--- a/packages/page-practice/lib/settings/lesson/PausedKeysProp.tsx
++++ b/packages/page-practice/lib/settings/lesson/PausedKeysProp.tsx
+@@ -0,0 +1,60 @@
++import { lessonProps } from "@keybr/lesson";
++import { useSettings } from "@keybr/settings";
++import { CheckBox, Field, FieldList } from "@keybr/widget";
++import { type ReactNode } from "react";
++import { FormattedMessage, useIntl } from "react-intl";
++
++export function PausedKeysProp({
++  letters,
++}: {
++  readonly letters: readonly { readonly label: string }[];
++}): ReactNode {
++  const { formatMessage } = useIntl();
++  const { settings, updateSettings } = useSettings();
++  const pausedKeys = settings.get(lessonProps.guided.pausedKeys);
++  const paused = new Set(pausedKeys);
++
++  return (
++    <FieldList>
++      <Field>
++        <FormattedMessage
++          id="t_Paused_keys"
++          defaultMessage="Paused keys:"
++        />
++      </Field>
++      <Field>
++        {letters.map((letter) => {
++          const isPaused = paused.has(letter.label);
++          return (
++            <CheckBox
++              key={letter.label}
++              label={letter.label.toUpperCase()}
++              title={formatMessage(
++                {
++                  id: "settings.pausedKeys.toggle",
++                  defaultMessage: "Pause or resume {key}",
++                },
++                { key: letter.label.toUpperCase() },
++              )}
++              checked={isPaused}
++              onChange={(value) => {
++                const next = new Set(paused);
++                if (value) {
++                  next.add(letter.label);
++                } else {
++                  next.delete(letter.label);
++                }
++                updateSettings(
++                  settings.set(
++                    lessonProps.guided.pausedKeys,
++                    [...next].join(""),
++                  ),
++                );
++              }}
++            />
++          );
++        })}
++      </Field>
++    </FieldList>
++  );
++}

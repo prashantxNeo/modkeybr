@@ -191,6 +191,33 @@ describe("generate text from a broken phonetic model", () => {
   });
 });
 
+test("paused keys are excluded from guided lessons", () => {
+  const settings = new Settings().set(
+    lessonProps.guided.pausedKeys,
+    FakePhoneticModel.letter1.label,
+  );
+  const keyboard = loadKeyboard(Layout.EN_US);
+  const model = new FakePhoneticModel();
+  const lesson = new GuidedLesson(settings, keyboard, model, []);
+
+  equal(
+    printLessonKeys(
+      lesson.update(
+        fakeKeyStatsMap(settings, [
+          [FakePhoneticModel.letter1, null, null], // A
+          [FakePhoneticModel.letter2, null, null], // B
+          [FakePhoneticModel.letter3, null, null], // C
+          [FakePhoneticModel.letter4, null, null], // D
+          [FakePhoneticModel.letter5, null, null], // E
+          [FakePhoneticModel.letter6, null, null], // F
+          [FakePhoneticModel.letter7, null, null], // G
+        ]),
+      ),
+    ),
+    "[B]CDEFG",
+  );
+});
+
 test("generate text with pseudo words", () => {
   const settings = new Settings().set(lessonProps.guided.naturalWords, false);
   const keyboard = loadKeyboard(Layout.EN_US);

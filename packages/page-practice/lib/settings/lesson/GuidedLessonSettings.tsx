@@ -6,6 +6,7 @@ import { AlphabetSizeProp } from "./AlphabetSizeProp.tsx";
 import { KeyboardOrderProp } from "./KeyboardOrderProp.tsx";
 import { LessonLengthProp } from "./LessonLengthProp.tsx";
 import { NaturalWordsProp } from "./NaturalWordsProp.tsx";
+import { PausedKeysProp } from "./PausedKeysProp.tsx";
 import { RecoverKeysProp } from "./RecoverKeysProp.tsx";
 import { RepeatWordsProp } from "./RepeatWordsProp.tsx";
 import { TargetSpeedProp } from "./TargetSpeedProp.tsx";
@@ -35,6 +36,7 @@ export function GuidedLessonSettings({
       >
         <TargetSpeedProp />
         <RecoverKeysProp />
+        <PausedKeysProp letters={lesson.letters} />
         <KeyboardOrderProp />
         <NaturalWordsProp />
         <RepeatWordsProp />
