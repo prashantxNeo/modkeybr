@@ -9,7 +9,7 @@ Forked from [keybr.com](https://github.com/aradzie/keybr.com)
 
 ## Why?
 
-Let's your overall typing speed is 70+ WPM, but for letter `Q` it's only 45 WPM. `Q` is rarely used so spending too much time practicing may not be worthwhile.
+Let's say your overall typing speed is 70+ WPM, but for letter `Q` it's only 45 WPM. `Q` is rarely used so spending too much time practicing may not be worthwhile.
 
 However, keys like `C`, `B`, `V`, and `X` might also be 50–55 WPM while being used more frequently. If your target is 60 WPM, Keybr may keep generating lessons for `Q` instead of  important keys.
 
